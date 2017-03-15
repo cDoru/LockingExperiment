@@ -247,3 +247,6 @@ Temporary Items
 /LockingWebApp/bin/Autofac.Integration.WebApi.xml
 /LockingWebApp/bin/Autofac.xml
 /LockingWebApp/obj/Debug/LockingWebApp.Locks.Db.InitialMigration.resources
+/LockingWebApp/bin/Autofac.Integration.Mvc.xml
+/packages/Autofac.Mvc5.4.0.1/Autofac.Mvc5.4.0.1.nupkg
+/packages/Autofac.Mvc5.4.0.1/lib/net45/Autofac.Integration.Mvc.xml
