@@ -239,6 +239,10 @@
     <Compile Include="Locks\Dto\ReleaseLockFailure.cs" />
     <Compile Include="Locks\SqlAppLock.cs" />
     <Compile Include="Locks\Utils\SqlHelpers.cs" />
+    <Compile Include="Migrations\201703151459351_InitialMigration.cs" />
+    <Compile Include="Migrations\201703151459351_InitialMigration.Designer.cs">
+      <DependentUpon>201703151459351_InitialMigration.cs</DependentUpon>
+    </Compile>
     <Compile Include="Models\AccountBindingModels.cs" />
     <Compile Include="Models\AccountViewModels.cs" />
     <Compile Include="Models\IdentityModels.cs" />
@@ -312,6 +316,11 @@
     <Content Include="fonts\glyphicons-halflings-regular.eot" />
     <Content Include="packages.config" />
     <None Include="Project_Readme.html" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Migrations\201703151459351_InitialMigration.resx">
+      <DependentUpon>201703151459351_InitialMigration.cs</DependentUpon>
+    </EmbeddedResource>
   </ItemGroup>
   <PropertyGroup>
     <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>
