@@ -204,6 +204,7 @@
     </Compile>
     <Compile Include="Locks\Configuration\ConfigurationKeys.cs" />
     <Compile Include="Locks\Configuration\ConfigurationProvider.cs" />
+    <Compile Include="Locks\Contracts\DistributedLockHelpers.cs" />
     <Compile Include="Locks\Contracts\IConfigurationProvider.cs" />
     <Compile Include="Locks\Contracts\IAppLock.cs" />
     <Compile Include="Locks\Dto\LockAcquisitionResult.cs" />
@@ -276,6 +277,7 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />
+    <Folder Include="Locks\Utils\" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="fonts\glyphicons-halflings-regular.woff" />

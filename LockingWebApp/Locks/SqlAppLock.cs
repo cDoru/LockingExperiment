@@ -2,10 +2,10 @@ using System;
 using System.Data;
 using System.Data.Common;
 using System.Data.SqlClient;
-using System.Globalization;
 using LockingWebApp.Locks.Configuration;
 using LockingWebApp.Locks.Contracts;
 using LockingWebApp.Locks.Dto;
+using LockingWebApp.Locks.Utils;
 
 namespace LockingWebApp.Locks
 {
@@ -56,7 +56,7 @@ namespace LockingWebApp.Locks
         ///     // dispose releases the lock if we took it
         /// </code>
         /// </summary>
-        /// <param name="@lock"></param>
+        /// <param name="lock"></param>
         /// <param name="timeout">How long to wait before giving up on acquiring the lock. Defaults to 0</param>
         /// <returns>An <see cref="IDisposable"/> "handle" which can be used to release the lock, or null if the lock was not taken</returns>
         public LockAcquisitionResult TryAcquire(string @lock, TimeSpan timeout = default(TimeSpan))
@@ -147,14 +147,17 @@ namespace LockingWebApp.Locks
         {
             // dispose connection and transaction unless they are externally owned
             if (_connectionString == null) return;
+
             if (connection != null)
             {
                 connection.Dispose();
             }
         }
 
-        public LockReleaseResult ReleaseLock(string lockName, string lockOwner)
+        public LockReleaseResult ReleaseLock(string @lock, string lockOwner)
         {
+            var lockName = DistributedLockHelpers.ToSafeLockName(@lock, MaxLockNameLength, s => s);
+
             // otherwise issue the release command
             var connection = GetConnection();
             if (_connectionString != null)
@@ -254,8 +257,8 @@ namespace LockingWebApp.Locks
                 // (see https://msdn.microsoft.com/en-us/library/system.data.sqlclient.sqlcommand.commandtimeout%28v=vs.110%29.aspx)
                 : 0;
 
-            command.Parameters.Add(CreateStringParameter(command, "lockName", lockName));
-            command.Parameters.Add(CreateUniqueidentityParameter(command, "owner", lockOwner));
+            command.Parameters.Add(SqlHelpers.CreateStringParameter(command, "lockName", lockName));
+            command.Parameters.Add(SqlHelpers.CreateUniqueidentityParameter(command, "owner", lockOwner));
             return command;
         }
 
@@ -276,8 +279,8 @@ namespace LockingWebApp.Locks
                 // (see https://msdn.microsoft.com/en-us/library/system.data.sqlclient.sqlcommand.commandtimeout%28v=vs.110%29.aspx)
                 : 0;
 
-            command.Parameters.Add(CreateStringParameter(command, "lockName", lockName));
-            command.Parameters.Add(CreateUniqueidentityParameter(command, "owner", lockOwner));
+            command.Parameters.Add(SqlHelpers.CreateStringParameter(command, "lockName", lockName));
+            command.Parameters.Add(SqlHelpers.CreateUniqueidentityParameter(command, "owner", lockOwner));
             command.Parameters.Add(returnValue = new SqlParameter { Direction = ParameterDirection.ReturnValue });
             return command;
         }
@@ -294,7 +297,7 @@ namespace LockingWebApp.Locks
                 // otherwise timeout is infinite so we use the infinite timeout of 0
                 // (see https://msdn.microsoft.com/en-us/library/system.data.sqlclient.sqlcommand.commandtimeout%28v=vs.110%29.aspx)
                 : 0;
-            checkCommand.Parameters.Add(CreateStringParameter(checkCommand, "@lockName", lockName));
+            checkCommand.Parameters.Add(SqlHelpers.CreateStringParameter(checkCommand, "@lockName", lockName));
             return checkCommand;
         }
 
@@ -322,51 +325,14 @@ namespace LockingWebApp.Locks
                 // (see https://msdn.microsoft.com/en-us/library/system.data.sqlclient.sqlcommand.commandtimeout%28v=vs.110%29.aspx)
                 : 0;
 
-            insertCommand.Parameters.Add(CreateUniqueidentityParameter(insertCommand, "Id", id));
-            insertCommand.Parameters.Add(CreateDateParameter(insertCommand, "UtcTimestamp", utcTimestamp));
-            insertCommand.Parameters.Add(CreateStringParameter(insertCommand, "LockName", lockName));
+            insertCommand.Parameters.Add(SqlHelpers.CreateUniqueidentityParameter(insertCommand, "Id", id));
+            insertCommand.Parameters.Add(SqlHelpers.CreateDateParameter(insertCommand, "UtcTimestamp", utcTimestamp));
+            insertCommand.Parameters.Add(SqlHelpers.CreateStringParameter(insertCommand, "LockName", lockName));
 
             insertCommand.Parameters.Add(returnValue = new SqlParameter { Direction = ParameterDirection.ReturnValue });
             return insertCommand;
         }
 
-        private static DbParameter CreateParameter(DbCommand command, string name, object value)
-        {
-            var parameter = command.CreateParameter();
-            parameter.ParameterName = name;
-            parameter.Value = value;
-            return parameter;
-        }
-
-        private static DbParameter CreateStringParameter(DbCommand cmd, string name, string value)
-        {
-            var parameter = cmd.CreateParameter();
-            parameter.ParameterName = name;
-            parameter.Direction = ParameterDirection.Input;
-            parameter.DbType = DbType.String;
-            parameter.Value = value;
-
-            return parameter;
-        }
-
-        private static DbParameter CreateDateParameter(DbCommand cmd, string name, DateTime date)
-        {
-            var param = cmd.CreateParameter();
-            param.ParameterName = name;
-            param.DbType = DbType.DateTime;
-            param.Direction = ParameterDirection.Input;
-            param.Value = date.ToString("yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture);
-            return param;
-        }
-
-        private static DbParameter CreateUniqueidentityParameter(DbCommand cmd, string name, Guid uniqueidentifier)
-        {
-            var parameter = cmd.CreateParameter();
-            parameter.ParameterName = name;
-            parameter.DbType = DbType.Guid;
-            parameter.Direction = ParameterDirection.Input;
-            parameter.Value = uniqueidentifier;
-            return parameter;
-        }
+        
     }
 }
