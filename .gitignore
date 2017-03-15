@@ -246,3 +246,4 @@ Temporary Items
 /packages/Newtonsoft.Json.6.0.4/lib/portable-net45+wp80+win8+wpa81/Newtonsoft.Json.xml
 /LockingWebApp/bin/Autofac.Integration.WebApi.xml
 /LockingWebApp/bin/Autofac.xml
+/LockingWebApp/obj/Debug/LockingWebApp.Locks.Db.InitialMigration.resources
