@@ -237,3 +237,10 @@ Temporary Items
 /LockingWebApp/bin/System.Web.WebPages.Razor.xml
 /LockingWebApp/bin/System.Web.WebPages.xml
 /LockingWebApp/obj/Debug/LockingWebApp.csproj.FileListAbsolute.txt
+/packages/Autofac.4.4.0/Autofac.4.4.0.nupkg
+/packages/Autofac.4.4.0/lib/net45/Autofac.xml
+/packages/Autofac.4.4.0/lib/netstandard1.1/Autofac.xml
+/packages/Autofac.WebApi2.4.0.1/Autofac.WebApi2.4.0.1.nupkg
+/packages/Autofac.WebApi2.4.0.1/lib/net45/Autofac.Integration.WebApi.xml
+/packages/Newtonsoft.Json.6.0.4/lib/portable-net40+sl5+wp80+win8+wpa81/Newtonsoft.Json.xml
+/packages/Newtonsoft.Json.6.0.4/lib/portable-net45+wp80+win8+wpa81/Newtonsoft.Json.xml
