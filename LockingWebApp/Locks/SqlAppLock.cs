@@ -88,14 +88,14 @@ namespace LockingWebApp.Locks
                     throw new InvalidOperationException("The connection is not open");
                 }
 
-                var checkCommand = CreateCheckLockAvailabilityCommand(acquireConnection, timeoutMillis, lockName);
+                var checkCommand = SqlHelpers.CreateCheckLockAvailabilityCommand(acquireConnection, timeoutMillis, lockName);
                 var exists = (int)checkCommand.ExecuteScalar() > 0;
                 if (exists) return LockAcquisitionResult.Fail;
 
                 var id = Guid.NewGuid();
 
                 SqlParameter insertReturnValue;
-                using (var insertCommand = CreateInsertApplicationLockCommand(acquireConnection, id,
+                using (var insertCommand = SqlHelpers.CreateInsertApplicationLockCommand(acquireConnection, id,
                     timeoutMillis, lockName, Utc, out insertReturnValue))
                 {
                     insertCommand.ExecuteNonQuery();
@@ -112,7 +112,7 @@ namespace LockingWebApp.Locks
                     owner = _encryptor.Encrypt(id.ToString());
 
                     // check no duplicates.
-                    var checkDuplicateCommand = CreateCheckLockAvailabilityCommand(acquireConnection, timeoutMillis, lockName);
+                    var checkDuplicateCommand = SqlHelpers.CreateCheckLockAvailabilityCommand(acquireConnection, timeoutMillis, lockName);
                     var duplicatesExist = (int)checkDuplicateCommand.ExecuteScalar() > 1;
 
                     if (duplicatesExist)
@@ -176,7 +176,7 @@ namespace LockingWebApp.Locks
             }
 
             var id = Guid.Parse(_encryptor.Decrypt(lockOwner));
-            using (var checkCommand = CreateCheckApplicationLockCommand(connection, 1000, lockName, id))
+            using (var checkCommand = SqlHelpers.CreateCheckApplicationLockCommand(connection, 1000, lockName, id))
             {
                 var exists = (int)checkCommand.ExecuteScalar() > 0;
 
@@ -192,7 +192,7 @@ namespace LockingWebApp.Locks
                 SqlParameter deleteReturnValue;
 
                 using (
-                    var releaseCommand = CreateDeleteApplicationLockCommand(connection,
+                    var releaseCommand = SqlHelpers.CreateDeleteApplicationLockCommand(connection,
                         1000, lockName, id, out deleteReturnValue))
                 {
                     releaseCommand.ExecuteNonQuery();
@@ -232,7 +232,7 @@ namespace LockingWebApp.Locks
             }
 
             var id = Guid.Parse(_encryptor.Decrypt(lockOwner));
-            using (var checkCommand = CreateCheckApplicationLockCommand(connection, 1000, lockName, id))
+            using (var checkCommand = SqlHelpers.CreateCheckApplicationLockCommand(connection, 1000, lockName, id))
             {
                 var exists = (int)checkCommand.ExecuteScalar() > 0;
                 return exists;
@@ -244,96 +244,7 @@ namespace LockingWebApp.Locks
             return new SqlConnection(_connectionString);
         }
 
-        private static DbCommand CreateCheckApplicationLockCommand(DbConnection connection, int timeoutMillis, string lockName,
-            Guid lockOwner)
-        {
-            var command = connection.CreateCommand();
-            //command.Transaction = transaction;
-            command.CommandText = "select COUNT(*) from [dbo].[ApplicationLock] where [LockName] = @lockName and [Id] = @owner";
-
-            command.CommandType = CommandType.Text;
-            command.CommandTimeout = timeoutMillis >= 0
-                // command timeout is in seconds. We always wait at least the lock timeout plus a buffer 
-                ? (timeoutMillis / 1000) + 30
-                // otherwise timeout is infinite so we use the infinite timeout of 0
-                // (see https://msdn.microsoft.com/en-us/library/system.data.sqlclient.sqlcommand.commandtimeout%28v=vs.110%29.aspx)
-                : 0;
-
-            command.Parameters.Add(SqlHelpers.CreateStringParameter(command, "lockName", lockName));
-            command.Parameters.Add(SqlHelpers.CreateUniqueidentityParameter(command, "owner", lockOwner));
-            return command;
-        }
-
-
-        private static DbCommand CreateDeleteApplicationLockCommand(DbConnection connection,
-            int timeoutMillis, string lockName, Guid lockOwner, out SqlParameter returnValue)
-        {
-
-            var command = connection.CreateCommand();
-            //command.Transaction = transaction;
-            command.CommandText = "delete from [dbo].[ApplicationLock] where [LockName] = @lockName and [Id] = @owner";
-
-            command.CommandType = CommandType.Text;
-            command.CommandTimeout = timeoutMillis >= 0
-                // command timeout is in seconds. We always wait at least the lock timeout plus a buffer 
-                ? (timeoutMillis / 1000) + 30
-                // otherwise timeout is infinite so we use the infinite timeout of 0
-                // (see https://msdn.microsoft.com/en-us/library/system.data.sqlclient.sqlcommand.commandtimeout%28v=vs.110%29.aspx)
-                : 0;
-
-            command.Parameters.Add(SqlHelpers.CreateStringParameter(command, "lockName", lockName));
-            command.Parameters.Add(SqlHelpers.CreateUniqueidentityParameter(command, "owner", lockOwner));
-            command.Parameters.Add(returnValue = new SqlParameter { Direction = ParameterDirection.ReturnValue });
-            return command;
-        }
-
-        private static DbCommand CreateCheckLockAvailabilityCommand(DbConnection connection, int timeoutMillis,
-            string lockName)
-        {
-            var checkCommand = connection.CreateCommand();
-            checkCommand.CommandText = "select count(*) from [dbo].[ApplicationLock] where [LockName] = @lockName";
-            checkCommand.CommandType = CommandType.Text;
-            checkCommand.CommandTimeout = timeoutMillis >= 0
-                // command timeout is in seconds. We always wait at least the lock timeout plus a buffer 
-                ? (timeoutMillis / 1000) + 30
-                // otherwise timeout is infinite so we use the infinite timeout of 0
-                // (see https://msdn.microsoft.com/en-us/library/system.data.sqlclient.sqlcommand.commandtimeout%28v=vs.110%29.aspx)
-                : 0;
-            checkCommand.Parameters.Add(SqlHelpers.CreateStringParameter(checkCommand, "@lockName", lockName));
-            return checkCommand;
-        }
-
-
-        private static DbCommand CreateInsertApplicationLockCommand(DbConnection connection, Guid id, int timeoutMillis,
-            string lockName, DateTime utcTimestamp, out SqlParameter returnValue)
-        {
-
-            var insertCommand = connection.CreateCommand();
-            //command.Transaction = transaction;
-            insertCommand.CommandText = @"INSERT INTO [dbo].[ApplicationLock]
-                                       ([Id]
-                                       ,[UtcTimestamp]
-                                       ,[LockName])
-                                        VALUES
-                                       (@Id
-                                       ,@UtcTimestamp
-                                       ,@LockName)";
-
-            insertCommand.CommandType = CommandType.Text;
-            insertCommand.CommandTimeout = timeoutMillis >= 0
-                // command timeout is in seconds. We always wait at least the lock timeout plus a buffer 
-                ? (timeoutMillis / 1000) + 30
-                // otherwise timeout is infinite so we use the infinite timeout of 0
-                // (see https://msdn.microsoft.com/en-us/library/system.data.sqlclient.sqlcommand.commandtimeout%28v=vs.110%29.aspx)
-                : 0;
-
-            insertCommand.Parameters.Add(SqlHelpers.CreateUniqueidentityParameter(insertCommand, "Id", id));
-            insertCommand.Parameters.Add(SqlHelpers.CreateDateParameter(insertCommand, "UtcTimestamp", utcTimestamp));
-            insertCommand.Parameters.Add(SqlHelpers.CreateStringParameter(insertCommand, "LockName", lockName));
-
-            insertCommand.Parameters.Add(returnValue = new SqlParameter { Direction = ParameterDirection.ReturnValue });
-            return insertCommand;
-        }
+        
 
         /// <summary>
         /// Creates a safe lock name
