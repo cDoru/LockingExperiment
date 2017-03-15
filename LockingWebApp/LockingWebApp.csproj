@@ -211,6 +211,8 @@
     <Compile Include="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>
+    <Compile Include="Locks.Db\Configurations\ApplicationLockConfiguration.cs" />
+    <Compile Include="Locks.Db\Contracts\ILocksContext.cs" />
     <Compile Include="Locks.Db\Entities\ApplicationLock.cs" />
     <Compile Include="Locks.Db\Entities\Base\DbContextBase.cs" />
     <Compile Include="Locks.Db\Entities\Base\IConfigurationModule.cs" />
@@ -218,6 +220,7 @@
     <Compile Include="Locks.Db\Entities\Base\IGuidEntity.cs" />
     <Compile Include="Locks.Db\Exceptions\ContextException.cs" />
     <Compile Include="Locks.Db\Exceptions\ContextUniqueConstraintFailureException.cs" />
+    <Compile Include="Locks.Db\LockContext.cs" />
     <Compile Include="Locks.Db\Utils\LockUtil.cs" />
     <Compile Include="Locks.Db\Utils\SequentialGuid.cs" />
     <Compile Include="Locks\Configuration\ConfigurationKeys.cs" />
