@@ -6,5 +6,4 @@ namespace LockingWebApp.Locks.Db.Entities.Base
     {
         Guid Id { get; }
     }
-
 }
