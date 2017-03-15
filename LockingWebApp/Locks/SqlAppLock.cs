@@ -56,13 +56,16 @@ namespace LockingWebApp.Locks
         ///     // dispose releases the lock if we took it
         /// </code>
         /// </summary>
-        /// <param name="lockName"></param>
+        /// <param name="@lock"></param>
         /// <param name="timeout">How long to wait before giving up on acquiring the lock. Defaults to 0</param>
         /// <returns>An <see cref="IDisposable"/> "handle" which can be used to release the lock, or null if the lock was not taken</returns>
-        public LockAcquisitionResult TryAcquire(string lockName, TimeSpan timeout = default(TimeSpan))
+        public LockAcquisitionResult TryAcquire(string @lock, TimeSpan timeout = default(TimeSpan))
         {
             // synchronous mode
             var timeoutMillis = timeout.ToInt32Timeout();
+
+            // calculate safe lock name
+            var lockName = DistributedLockHelpers.ToSafeLockName(@lock, MaxLockNameLength, s => s);
 
             DbConnection acquireConnection = null;
             var cleanup = true;

@@ -1,23 +1,9 @@
-﻿using System;
+using System;
 using System.Security.Cryptography;
 using System.Text;
-using LockingWebApp.Locks.Dto;
 
 namespace LockingWebApp.Locks.Contracts
 {
-    public interface IAppLock
-    {
-        LockAcquisitionResult TryAcquire(string lockName, TimeSpan timeout = default(TimeSpan));
-        LockReleaseResult ReleaseLock(string lockName, string lockOwner);
-        bool VerifyLockOwnership(string lockName, string lockOwner);
-    }
-    public interface IEncryptor
-    {
-        string Encrypt(string val);
-        string Decrypt(string val);
-    }
-
-
     internal static class DistributedLockHelpers
     {
         public static int ToInt32Timeout(this TimeSpan timeout, string paramName = null)
@@ -58,5 +44,4 @@ namespace LockingWebApp.Locks.Contracts
             }
         }
     }
-
 }
