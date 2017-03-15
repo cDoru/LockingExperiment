@@ -6,6 +6,7 @@ using System.Web.Mvc;
 using Autofac;
 using Autofac.Integration.Mvc;
 using Autofac.Integration.WebApi;
+using LockingWebApp.Locks;
 using LockingWebApp.Locks.Configuration;
 using LockingWebApp.Locks.Contracts;
 using LockingWebApp.Locks.Db;
@@ -23,6 +24,8 @@ namespace LockingWebApp.App_Start
             var builder = new ContainerBuilder();
             builder.Register<IConfigurationProvider>(c => new ConfigurationProvider()).SingleInstance();
             builder.RegisterType<Encryptor>().As<IEncryptor>().SingleInstance();
+            builder.RegisterType<SqlAppLock>().As<IAppLock>().InstancePerLifetimeScope();
+            builder.RegisterType<Lock>().As<ILock>().InstancePerLifetimeScope();
 
             builder.RegisterModule(new DalModule());
             AutowireProperties(builder);

@@ -1,22 +1,31 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Web.Http;
-using LockingWebApp.Locks.Db.Contracts;
+using LockingWebApp.Locks.Contracts;
 
 namespace LockingWebApp.Controllers
 {
     public class ValuesController : ApiController
     {
-        private readonly ILocksContext _context;
+        private readonly ILock _lock;
 
-        public ValuesController(ILocksContext context)
+        public ValuesController( ILock @lock)
         {
-            _context = context;
+            _lock = @lock;
         }
 
         // GET api/values
         public IEnumerable<string> Get()
         {
-            return new string[] { "value1", "value2" };
+            using (var handle = _lock.Acquire("api/values", TimeSpan.FromSeconds(5)))
+            {
+                if (handle.AcquisitionFailed)
+                {
+                    return new[] {"too fast"};
+                }
+
+                return new[] { "value1", "value2" };
+            }
         }
 
         // GET api/values/5

@@ -14,6 +14,14 @@ namespace LockingWebApp.Locks.Configuration
                 {
                     return ConfigurationManager.AppSettings[ConfigurationKeys.DbConnection];
                 }
+                case ConfigurationKeys.EncryptKey:
+                {
+                    return ConfigurationManager.AppSettings[ConfigurationKeys.EncryptKey];
+                }
+                case ConfigurationKeys.EncryptVector:
+                {
+                    return ConfigurationManager.AppSettings[ConfigurationKeys.EncryptVector];
+                }
                 default:
                     throw new InvalidOperationException("Configuration key not handled");
             }

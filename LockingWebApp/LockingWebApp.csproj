@@ -238,6 +238,11 @@
     <Compile Include="Locks.Db\Utils\SequentialGuid.cs" />
     <Compile Include="Locks\Configuration\ConfigurationKeys.cs" />
     <Compile Include="Locks\Configuration\ConfigurationProvider.cs" />
+    <Compile Include="Locks\Contracts\IDisposableShim.cs" />
+    <Compile Include="Locks\Contracts\IEncryptor.cs" />
+    <Compile Include="Locks\Contracts\ILock.cs" />
+    <Compile Include="Locks\Lock.cs" />
+    <Compile Include="Locks\Exceptions\LockAcquisitionException.cs" />
     <Compile Include="Locks\Utils\DistributedLockHelpers.cs" />
     <Compile Include="Locks\Contracts\IConfigurationProvider.cs" />
     <Compile Include="Locks\Contracts\IAppLock.cs" />

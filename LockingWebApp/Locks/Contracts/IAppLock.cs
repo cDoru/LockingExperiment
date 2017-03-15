@@ -9,9 +9,4 @@ namespace LockingWebApp.Locks.Contracts
         LockReleaseResult ReleaseLock(string lockName, string lockOwner);
         bool VerifyLockOwnership(string lockName, string lockOwner);
     }
-    public interface IEncryptor
-    {
-        string Encrypt(string val);
-        string Decrypt(string val);
-    }
 }
