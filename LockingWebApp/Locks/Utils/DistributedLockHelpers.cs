@@ -19,29 +19,5 @@ namespace LockingWebApp.Locks.Contracts
             return (int) totalMilliseconds;
         }
 
-        public static string ToSafeLockName(string baseLockName, int maxNameLength, Func<string, string> convertToValidName)
-        {
-            if (baseLockName == null)
-                throw new ArgumentNullException("baseLockName");
-
-            var validBaseLockName = convertToValidName(baseLockName);
-            if (validBaseLockName == baseLockName && validBaseLockName.Length <= maxNameLength)
-            {
-                return baseLockName;
-            }
-
-            using (var sha = new SHA512Managed())
-            {
-                var hash = Convert.ToBase64String(sha.ComputeHash(Encoding.UTF8.GetBytes(baseLockName)));
-
-                if (hash.Length >= maxNameLength)
-                {
-                    return hash.Substring(0, maxNameLength);
-                }
-
-                var prefix = validBaseLockName.Substring(0, Math.Min(validBaseLockName.Length, maxNameLength - hash.Length));
-                return prefix + hash;
-            }
-        }
     }
 }

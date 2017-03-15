@@ -2,6 +2,8 @@ using System;
 using System.Data;
 using System.Data.Common;
 using System.Data.SqlClient;
+using System.Security.Cryptography;
+using System.Text;
 using LockingWebApp.Locks.Configuration;
 using LockingWebApp.Locks.Contracts;
 using LockingWebApp.Locks.Dto;
@@ -14,16 +16,16 @@ namespace LockingWebApp.Locks
         private readonly IEncryptor _encryptor;
         private readonly string _connectionString;
 
-        public SqlAppLock(IConfigurationProvider configurationProvider, IEncryptor encryptor)
+        public SqlAppLock( IConfigurationProvider configurationProvider, IEncryptor encryptor)
         {
-            _encryptor = encryptor;
             _connectionString = configurationProvider.GetConfigurationValue(ConfigurationKeys.DbConnection);
+            _encryptor = encryptor;
         }
 
         /// <summary>
         /// The maximum allowed length for lock names. See https://msdn.microsoft.com/en-us/library/ms189823.aspx
         /// </summary>
-        public static int MaxLockNameLength
+        private static int MaxLockNameLength
         {
             get { return 255; }
         }
@@ -65,7 +67,7 @@ namespace LockingWebApp.Locks
             var timeoutMillis = timeout.ToInt32Timeout();
 
             // calculate safe lock name
-            var lockName = DistributedLockHelpers.ToSafeLockName(@lock, MaxLockNameLength, s => s);
+            var lockName = ToSafeLockName(@lock, MaxLockNameLength, s => s);
 
             DbConnection acquireConnection = null;
             var cleanup = true;
@@ -156,7 +158,7 @@ namespace LockingWebApp.Locks
 
         public LockReleaseResult ReleaseLock(string @lock, string lockOwner)
         {
-            var lockName = DistributedLockHelpers.ToSafeLockName(@lock, MaxLockNameLength, s => s);
+            var lockName = ToSafeLockName(@lock, MaxLockNameLength, s => s);
 
             // otherwise issue the release command
             var connection = GetConnection();
@@ -333,6 +335,37 @@ namespace LockingWebApp.Locks
             return insertCommand;
         }
 
+        /// <summary>
+        /// Creates a safe lock name
+        /// </summary>
+        /// <param name="baseLockName"></param>
+        /// <param name="maxNameLength"></param>
+        /// <param name="convertToValidName"></param>
+        /// <returns></returns>
+        private static string ToSafeLockName(string baseLockName, int maxNameLength, Func<string, string> convertToValidName)
+        {
+            if (baseLockName == null)
+                throw new ArgumentNullException("baseLockName");
+
+            var validBaseLockName = convertToValidName(baseLockName);
+            if (validBaseLockName == baseLockName && validBaseLockName.Length <= maxNameLength)
+            {
+                return baseLockName;
+            }
+
+            using (var sha = new SHA512Managed())
+            {
+                var hash = Convert.ToBase64String(sha.ComputeHash(Encoding.UTF8.GetBytes(baseLockName)));
+
+                if (hash.Length >= maxNameLength)
+                {
+                    return hash.Substring(0, maxNameLength);
+                }
+
+                var prefix = validBaseLockName.Substring(0, Math.Min(validBaseLockName.Length, maxNameLength - hash.Length));
+                return prefix + hash;
+            }
+        }
         
     }
 }
