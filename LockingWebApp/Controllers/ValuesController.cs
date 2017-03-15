@@ -1,15 +1,18 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net;
-using System.Net.Http;
+﻿using System.Collections.Generic;
 using System.Web.Http;
+using LockingWebApp.Locks.Db.Contracts;
 
 namespace LockingWebApp.Controllers
 {
-    [Authorize]
     public class ValuesController : ApiController
     {
+        private readonly ILocksContext _context;
+
+        public ValuesController(ILocksContext context)
+        {
+            _context = context;
+        }
+
         // GET api/values
         public IEnumerable<string> Get()
         {
