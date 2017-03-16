@@ -1,8 +1,6 @@
 using System;
-using System.Security.Cryptography;
-using System.Text;
 
-namespace LockingWebApp.Locks.Contracts
+namespace LockingWebApp.Locks.Utils
 {
     internal static class DistributedLockHelpers
     {
@@ -18,6 +16,5 @@ namespace LockingWebApp.Locks.Contracts
 
             return (int) totalMilliseconds;
         }
-
     }
 }
